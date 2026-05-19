@@ -24,9 +24,15 @@
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>1.18-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.8-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ca.bkaw</groupId>
+            <artifactId>paper-nms</artifactId>
+            <version>1.21.8-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
