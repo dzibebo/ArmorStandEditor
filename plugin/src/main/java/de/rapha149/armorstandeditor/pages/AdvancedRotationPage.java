@@ -75,7 +75,7 @@ public class AdvancedRotationPage extends Page {
         )).asGuiItem(event -> {
             Location loc = armorStand.getLocation();
             loc.setYaw(rotation);
-            armorStand.teleportAsync(loc);
+            armorStand.teleport(loc);
             playStepSound(player);
 
             currentRotation.set(rotation);
@@ -88,7 +88,7 @@ public class AdvancedRotationPage extends Page {
                 KEY + "change.button", Map.of("%amount%", String.valueOf(amount))).asGuiItem(event -> {
             Location loc = armorStand.getLocation();
             loc.setYaw(getRotation(loc.getYaw() + amount * (event.isLeftClick() ? 1 : -1)));
-            armorStand.teleportAsync(loc);
+            armorStand.teleport(loc);
             playStepSound(player);
 
             currentRotation.set(Math.round(loc.getYaw()));

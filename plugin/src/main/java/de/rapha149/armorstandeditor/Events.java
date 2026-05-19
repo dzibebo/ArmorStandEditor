@@ -212,7 +212,7 @@ public class Events implements Listener {
                         loc.setZ(loc.getBlockZ() + 0.5);
                     }
 
-                    armorStand.teleportAsync(loc);
+                    armorStand.teleport(loc);
                 }
             }, 0, 1)));
         } else {
@@ -260,7 +260,7 @@ public class Events implements Listener {
 
                 DustOptions options = new DustOptions(Color.fromRGB(255, 0, 0), 0.5F);
                 for (Location loc : locations)
-                    player.spawnParticle(Particle.DUST, loc, 1, options);
+                    player.spawnParticle(Particle.REDSTONE, loc, 1, options);
 
                 if (System.currentTimeMillis() > time + 1000) {
                     Location eyeLoc = player.getEyeLocation();
@@ -276,13 +276,13 @@ public class Events implements Listener {
                     }
 
                     if (closest != null && !closest.equals(center)) {
-                        armorStand.teleportAsync(closest);
+                        armorStand.teleport(closest);
                         movement.updateOffset(closest);
                         locations.clear();
                     } else
-                        armorStand.teleportAsync(center);
+                        armorStand.teleport(center);
                 } else
-                    armorStand.teleportAsync(center);
+                    armorStand.teleport(center);
             }, 0, 1);
 
             moving.put(player, movement);
@@ -331,7 +331,7 @@ public class Events implements Listener {
 
             DustOptions options = new DustOptions(Color.fromRGB(255, 0, 0), 0.5F);
             for (Location loc : locations)
-                player.spawnParticle(Particle.DUST, loc, 1, options);
+                player.spawnParticle(Particle.REDSTONE, loc, 1, options);
 
             if (System.currentTimeMillis() > time + 1000) {
                 Location eyeLoc = player.getEyeLocation();
@@ -347,13 +347,13 @@ public class Events implements Listener {
                 }
 
                 if (closest != null && !closest.equals(center)) {
-                    armorStand.teleportAsync(closest);
+                    armorStand.teleport(closest);
                     movement.updateOffset(closest);
                     locations.clear();
                 } else
-                    armorStand.teleportAsync(center);
+                    armorStand.teleport(center);
             } else
-                armorStand.teleportAsync(center);
+                armorStand.teleport(center);
         }, 0, 1);
 
         moving.put(player, movement);
@@ -594,7 +594,7 @@ public class Events implements Listener {
 
     public static void cancelMovement(ArmorStandMovement movement) {
         if (movement instanceof ArmorStandPositionMovement positionMovement) {
-            movement.armorStand.teleportAsync(positionMovement.originalLocation);
+            movement.armorStand.teleport(positionMovement.originalLocation);
         } else if (movement instanceof ArmorStandBodyPartMovement bodyPartMovement) {
             bodyPartMovement.bodyPart.set(movement.armorStand, bodyPartMovement.cancelAngle);
         } else if (movement instanceof ArmorStandRotationMovement rotationMovement) {
