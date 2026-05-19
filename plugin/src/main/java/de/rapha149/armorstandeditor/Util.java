@@ -384,7 +384,7 @@ public class Util {
     public static boolean teleportArmorStand(Player player, ArmorStand armorStand, Location loc) {
         int max = Config.get().features.movePosition.maxDistanceSquared;
         if (max == 0 || (player.getWorld().getUID().equals(loc.getWorld().getUID()) && player.getLocation().distanceSquared(loc) <= max)) {
-            armorStand.teleport(loc);
+            armorStand.teleportAsync(loc);
             return true;
         }
         return false;
