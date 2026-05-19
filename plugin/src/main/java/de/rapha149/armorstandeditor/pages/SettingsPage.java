@@ -9,6 +9,7 @@ import de.rapha149.armorstandeditor.Messages.Message;
 import de.rapha149.armorstandeditor.Util;
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -24,7 +25,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -49,7 +49,7 @@ public class SettingsPage extends Page {
                 .allMatch(type -> armorStand.hasEquipmentLock(slot, type))).collect(Collectors.toList());
         boolean[] settings = getSettings(armorStand);
 
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+        ScheduledTask task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
             boolean update = false;
             List<EquipmentSlot> currentDisabled = Arrays.stream(EquipmentSlot.values()).filter(slot -> Arrays.stream(LockType.values())
                     .allMatch(type -> armorStand.hasEquipmentLock(slot, type))).toList();
@@ -77,7 +77,7 @@ public class SettingsPage extends Page {
 
             if (update)
                 gui.update();
-        }, 40, 40);
+        }, null, 40L, 40L);
 
         setDisabledSlotItem(player, gui, armorStand, EquipmentSlot.HEAD, disabled.contains(EquipmentSlot.HEAD));
         setDisabledSlotItem(player, gui, armorStand, EquipmentSlot.CHEST, disabled.contains(EquipmentSlot.CHEST));

@@ -18,20 +18,6 @@ import static de.rapha149.armorstandeditor.Messages.getMessage;
 
 public final class ArmorStandEditor extends JavaPlugin {
 
-    private static final Map<String, String> VERSIONS = Map.of(
-            "1.20.5", "1_20_R4",
-            "1.20.6", "1_20_R4",
-            "1.21.1", "1_21_R1",
-            "1.21.3", "1_21_R2",
-            "1.21.4", "1_21_R3",
-            "1.21.5", "1_21_R4",
-            "1.21.6", "1_21_R5",
-            "1.21.7", "1_21_R5",
-            "1.21.8", "1_21_R5",
-            "1.21.9", "1_21_R6"
-    );
-    private static final String NEWEST_VERSION = "1_21_R6";
-
     private static ArmorStandEditor instance;
 
     public VersionWrapper wrapper;
@@ -39,18 +25,7 @@ public final class ArmorStandEditor extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-
-        String craftBukkitPackage = Bukkit.getServer().getClass().getPackage().getName();
-        String nmsVersion = craftBukkitPackage.contains(".v") ? craftBukkitPackage.split("\\.")[3].substring(1) :
-                VERSIONS.getOrDefault(Bukkit.getBukkitVersion().split("-")[0], NEWEST_VERSION);
-        try {
-            wrapper = (VersionWrapper) Class.forName(VersionWrapper.class.getPackage().getName() + ".Wrapper" + nmsVersion).getDeclaredConstructor().newInstance();
-        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException |
-                 InvocationTargetException exception) {
-            throw new IllegalStateException("Failed to load support for server version " + nmsVersion, exception);
-        } catch (ClassNotFoundException exception) {
-            throw new IllegalStateException("ArmorStandEditor does not support the server version \"" + nmsVersion + "\"", exception);
-        }
+        wrapper = new Wrapper();
 
         Messages.loadMessages();
         try {
@@ -64,7 +39,7 @@ public final class ArmorStandEditor extends JavaPlugin {
         loadMetrics();
 
         if (Config.get().checkForUpdates) {
-            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            Bukkit.getAsyncScheduler().runNow(this, _ -> {
                 String version = Updates.getAvailableVersion();
                 if (version != null) {
                     if (version.isEmpty())

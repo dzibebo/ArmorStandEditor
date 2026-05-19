@@ -3,14 +3,13 @@ package de.rapha149.armorstandeditor.pages;
 import de.rapha149.armorstandeditor.ArmorStandEditor;
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,18 +51,22 @@ public class AdvancedRotationPage extends Page {
         ArmorStandStatus status = new ArmorStandStatus(player, armorStand, gui);
 
         gui.setItem(gui.getRows(), 1, applyNameAndLore(ItemBuilder.from(Material.ARROW), "armorstands.advanced_controls.leave").asGuiItem(event -> {
-            Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, 1, false));
+            player.getScheduler().run(
+                    ArmorStandEditor.getInstance(),
+                    _ -> openGUI(player, armorStand, 1, false),
+                    null
+            );
             playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
         }));
 
         AtomicInteger currentRotation = new AtomicInteger(Math.round(armorStand.getLocation().getYaw()));
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+        ScheduledTask task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
             int rotation = Math.round(getRotation(armorStand.getLocation().getYaw()));
             if (currentRotation.get() != rotation) {
                 currentRotation.set(rotation);
                 setCurrentRotationItem(gui, armorStand);
             }
-        }, 40, 40);
+        }, null, 40L, 40L);
 
         setCurrentRotationItem(gui, armorStand);
 

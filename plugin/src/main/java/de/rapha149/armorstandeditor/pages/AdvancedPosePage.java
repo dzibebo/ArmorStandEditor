@@ -40,7 +40,11 @@ public class AdvancedPosePage extends Page {
         ArmorStandStatus status = new ArmorStandStatus(player, armorStand, gui);
 
         gui.setItem(gui.getRows(), 1, applyNameAndLore(ItemBuilder.from(Material.ARROW), "armorstands.advanced_controls.leave").asGuiItem(event -> {
-            Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, 1, false));
+            player.getScheduler().run(
+                    ArmorStandEditor.getInstance(),
+                    task -> openGUI(player, armorStand, 1, false),
+                    null
+            );
             playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
         }));
 
@@ -54,13 +58,21 @@ public class AdvancedPosePage extends Page {
                     "%pose_y%", angleToString(angle.getY()),
                     "%pose_z%", angleToString(angle.getZ())
                 )).asGuiItem(event -> {
-                Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, new AdvancedPoseBodyPartPage(bodyPart)));
+                player.getScheduler().run(
+                        ArmorStandEditor.getInstance(),
+                        task -> openGUI(player, armorStand, new AdvancedPoseBodyPartPage(bodyPart)),
+                        null
+                );
                 playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
             }));
         });
 
         gui.setItem(3, 7, applyNameAndLore(ItemBuilder.from(Material.WRITTEN_BOOK), KEY + "overview.presets").asGuiItem(event -> {
-            Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, ADVANCED_POSE_PRESETS_PAGE));
+            player.getScheduler().run(
+                    ArmorStandEditor.getInstance(),
+                    task -> openGUI(player, armorStand, ADVANCED_POSE_PRESETS_PAGE),
+                    null
+            );
             playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
         }));
 

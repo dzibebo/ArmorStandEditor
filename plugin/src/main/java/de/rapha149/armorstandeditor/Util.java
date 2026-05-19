@@ -128,7 +128,11 @@ public class Util {
                     return;
                 }
                 armorPageCooldowns.add(uuid);
-                Bukkit.getScheduler().runTaskLater(ArmorStandEditor.getInstance(), () -> armorPageCooldowns.remove(uuid), cooldown.ticks);
+                Bukkit.getGlobalRegionScheduler().runDelayed(
+                        ArmorStandEditor.getInstance(),
+                        _ -> armorPageCooldowns.remove(uuid),
+                        cooldown.ticks
+                );
             }
         }
 
@@ -208,7 +212,11 @@ public class Util {
                         "%current%", String.valueOf(page),
                         "%max%", String.valueOf(maxPages)
                 )).adventure()).asGuiItem(event -> {
-                    Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, page - 1, advancedControls));
+                    player.getScheduler().run(
+                            ArmorStandEditor.getInstance(),
+                            _ -> openGUI(player, armorStand, page - 1, advancedControls),
+                            null
+                    );
                     playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
                 }));
             }
@@ -217,7 +225,11 @@ public class Util {
                         "%current%", String.valueOf(page),
                         "%max%", String.valueOf(maxPages)
                 )).adventure()).asGuiItem(event -> {
-                    Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, page + 1, advancedControls));
+                    player.getScheduler().run(
+                            ArmorStandEditor.getInstance(),
+                            _ -> openGUI(player, armorStand, page + 1, advancedControls),
+                            null
+                    );
                     playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
                 }));
             }
@@ -234,7 +246,11 @@ public class Util {
                         return;
                     }
 
-                    Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, i, advancedControls));
+                    player.getScheduler().run(
+                            ArmorStandEditor.getInstance(),
+                            _ -> openGUI(player, armorStand, i, advancedControls),
+                            null
+                    );
                     playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
                 }), switch (i) {
                     case 1 -> features.movePosition;
@@ -461,12 +477,17 @@ public class Util {
     }
 
     public static void runOneTimeItemClickAction(ArmorStandStatus status, Runnable action) {
-        Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> {
-            if (status.oneTimeItemClicked)
-                return;
-            status.oneTimeItemClicked = true;
-            action.run();
-        });
+        status.armorStand.getScheduler().run(
+                ArmorStandEditor.getInstance(),
+                _ -> {
+                    if (status.oneTimeItemClicked)
+                        return;
+
+                    status.oneTimeItemClicked = true;
+                    action.run();
+                },
+                null
+        );
     }
 
     public static class ArmorStandStatus {

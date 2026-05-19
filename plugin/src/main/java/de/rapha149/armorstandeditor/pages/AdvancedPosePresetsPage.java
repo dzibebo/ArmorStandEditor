@@ -38,7 +38,11 @@ public class AdvancedPosePresetsPage extends Page {
         ArmorStandStatus status = new ArmorStandStatus(player, armorStand, gui);
 
         gui.setItem(gui.getRows(), 1, applyNameAndLore(ItemBuilder.from(Material.ARROW), KEY + "back").asGuiItem(event -> {
-            Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, PAGE_NUMBER, true));
+            player.getScheduler().run(
+                    ArmorStandEditor.getInstance(),
+                    task -> openGUI(player, armorStand, PAGE_NUMBER, true),
+                    null
+            );
             playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
         }));
 

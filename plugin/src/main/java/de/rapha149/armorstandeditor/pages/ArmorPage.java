@@ -69,12 +69,13 @@ public class ArmorPage extends Page {
         } else {
             EQUIPMENT_SLOTS.forEach(slot -> gui.setItem(slot, ItemBuilder.from(Material.AIR).asGuiItem()));
             EQUIPMENT_CACHE.put(armorStand, equipmentItems);
-            Bukkit.getScheduler().runTaskLater(ArmorStandEditor.getInstance(), () -> {
+
+            player.getScheduler().runDelayed(ArmorStandEditor.getInstance(), _ -> {
                 Inventory inv = gui.getInventory();
                 for (int i = 0; i < EQUIPMENT_SLOTS.size(); i++)
                     inv.setItem(EQUIPMENT_SLOTS.get(i), equipmentItems[i]);
                 status.saveEquipment = true;
-            }, 2L);
+            }, null, 2L);
 
             gui.setDragAction(event -> {
                 if (!status.saveEquipment) {
@@ -261,7 +262,11 @@ public class ArmorPage extends Page {
                 }
 
                 int finalNewPage = newPage;
-                Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, finalNewPage, true));
+                player.getScheduler().run(
+                        ArmorStandEditor.getInstance(),
+                        task -> openGUI(player, armorStand, finalNewPage, true),
+                        null
+                );
                 playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
             });
 

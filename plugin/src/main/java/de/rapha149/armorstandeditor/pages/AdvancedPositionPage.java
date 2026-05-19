@@ -4,14 +4,13 @@ import de.rapha149.armorstandeditor.ArmorStandEditor;
 import de.rapha149.armorstandeditor.version.Axis;
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -70,19 +69,23 @@ public class AdvancedPositionPage extends Page {
         ArmorStandStatus status = new ArmorStandStatus(player, armorStand, gui);
 
         gui.setItem(gui.getRows(), 1, applyNameAndLore(ItemBuilder.from(Material.ARROW), "armorstands.advanced_controls.leave").asGuiItem(event -> {
-            Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, 1, false));
+            player.getScheduler().run(
+                    ArmorStandEditor.getInstance(),
+                    task -> openGUI(player, armorStand, 1, false),
+                    null
+            );
             playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
         }));
 
         double[] currentLoc = new double[3];
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+        ScheduledTask task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
             Location loc = armorStand.getLocation();
             double[] actual = new double[]{loc.getX(), loc.getY(), loc.getZ()};
             if (!Arrays.equals(currentLoc, actual)) {
                 System.arraycopy(actual, 0, currentLoc, 0, actual.length);
                 setCurrentPositionItem(gui, armorStand);
             }
-        }, 40, 40);
+        }, null, 40L, 40L);
 
         setCurrentPositionItem(gui, armorStand);
 

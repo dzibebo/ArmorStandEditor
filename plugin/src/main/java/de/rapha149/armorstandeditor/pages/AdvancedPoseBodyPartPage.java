@@ -6,14 +6,13 @@ import de.rapha149.armorstandeditor.version.Axis;
 import de.rapha149.armorstandeditor.version.BodyPart;
 import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.EulerAngle;
 
 import java.util.Arrays;
@@ -83,7 +82,11 @@ public class AdvancedPoseBodyPartPage extends Page {
         ArmorStandStatus status = new ArmorStandStatus(player, armorStand, gui);
 
         gui.setItem(gui.getRows(), 1, applyNameAndLore(ItemBuilder.from(Material.ARROW), KEY + "back").asGuiItem(event -> {
-            Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> openGUI(player, armorStand, PAGE_NUMBER, true));
+            player.getScheduler().run(
+                    ArmorStandEditor.getInstance(),
+                    task -> openGUI(player, armorStand, PAGE_NUMBER, true),
+                    null
+            );
             playSound(player, Sound.ITEM_BOOK_PAGE_TURN);
         }));
 
@@ -96,7 +99,7 @@ public class AdvancedPoseBodyPartPage extends Page {
                     Math.round(getRotation(angle.getZ()))
             };
         }
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+        ScheduledTask task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _-> {
             for (BodyPart bodyPart : BodyPart.values()) {
                 EulerAngle angle = bodyPart.get(armorStand);
                 Long[] actual = {
@@ -109,7 +112,7 @@ public class AdvancedPoseBodyPartPage extends Page {
                     setCurrentPoseItem(gui, armorStand);
                 }
             }
-        }, 40, 40);
+        }, null, 40L, 40L);
 
         setCurrentPoseItem(gui, armorStand);
 

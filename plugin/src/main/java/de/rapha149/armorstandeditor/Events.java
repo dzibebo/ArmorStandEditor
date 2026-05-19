@@ -12,6 +12,7 @@ import de.rapha149.armorstandeditor.version.Axis;
 import de.rapha149.armorstandeditor.version.BodyPart;
 import de.rapha149.armorstandeditor.version.Direction;
 import de.rapha149.armorstandeditor.version.VersionWrapper;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -39,7 +40,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
@@ -64,16 +64,27 @@ public class Events implements Listener {
     public static final Map<Player, Entry<ArmorStand, Boolean>> vehicleSelection = new HashMap<>();
 
     public Events() {
-        Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), Events::runTask, 0, 20);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> Events.runTask(), 1L, 20L);
     }
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent event) {
         if (event.getEntity() instanceof ArmorStand armorStand) {
-            if (armorStand.removeScoreboardTag(INVISIBLE_TAG))
-                Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> armorStand.setInvisible(true));
-            if (armorStand.removeScoreboardTag(FIRE_TAG))
-                Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> armorStand.setVisualFire(true));
+            if (armorStand.removeScoreboardTag(INVISIBLE_TAG)) {
+                armorStand.getScheduler().run(
+                        ArmorStandEditor.getInstance(),
+                        task -> armorStand.setInvisible(true),
+                        null
+                );
+            }
+
+            if (armorStand.removeScoreboardTag(FIRE_TAG)) {
+                armorStand.getScheduler().run(
+                        ArmorStandEditor.getInstance(),
+                        task -> armorStand.setVisualFire(true),
+                        null
+                );
+            }
         }
     }
 
@@ -188,7 +199,7 @@ public class Events implements Listener {
         }
 
         if (!snapIn) {
-            moving.put(player, new ArmorStandPositionMovement(armorStand, Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+            moving.put(player, new ArmorStandPositionMovement(armorStand, armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
                 if (player.getWorld().getUID().equals(armorStand.getWorld().getUID())) {
                     Location playerLoc = player.getLocation();
                     Location loc = playerLoc.clone().add(playerLoc.getDirection().multiply(3));
@@ -214,12 +225,12 @@ public class Events implements Listener {
 
                     armorStand.teleportAsync(loc);
                 }
-            }, 0, 1)));
+            }, null, 1L, 1L)));
         } else {
             long time = System.currentTimeMillis();
 
             ArmorStandPositionSnapInMovement movement = new ArmorStandPositionSnapInMovement(armorStand, null);
-            movement.task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+            movement.task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
                 if (!player.getWorld().getUID().equals(armorStand.getWorld().getUID()))
                     return;
 
@@ -283,7 +294,7 @@ public class Events implements Listener {
                         armorStand.teleportAsync(center);
                 } else
                     armorStand.teleportAsync(center);
-            }, 0, 1);
+            }, null, 1L, 1L);
 
             moving.put(player, movement);
         }
@@ -301,7 +312,7 @@ public class Events implements Listener {
         long time = System.currentTimeMillis();
 
         ArmorStandPositionSnapInMovement movement = new ArmorStandPositionSnapInMovement(armorStand, axis);
-        movement.task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+        movement.task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
             if (!player.getWorld().getUID().equals(armorStand.getWorld().getUID()))
                 return;
 
@@ -354,7 +365,7 @@ public class Events implements Listener {
                     armorStand.teleportAsync(center);
             } else
                 armorStand.teleportAsync(center);
-        }, 0, 1);
+        }, null, 1L, 1L);
 
         moving.put(player, movement);
         runTask();
@@ -369,7 +380,7 @@ public class Events implements Listener {
 
         ArmorStandBodyPartMovement movement = new ArmorStandBodyPartMovement(armorStand, bodyPart,
                 player.getLocation().getYaw(), player.getLocation().getPitch());
-        movement.task = Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(), () -> {
+        movement.task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
             EulerAngle angle = bodyPart.get(armorStand);
             Location loc = player.getLocation();
 
@@ -396,7 +407,7 @@ public class Events implements Listener {
                 case Z -> angle.setZ(movement.zeroAngle.getZ() + pitchChange);
             };
             bodyPart.set(armorStand, angle);
-        }, 1, 1);
+        }, null, 1L, 1L);
 
         moving.put(player, movement);
         runTask();
@@ -409,8 +420,8 @@ public class Events implements Listener {
             return;
         }
 
-        moving.put(player, new ArmorStandRotationMovement(armorStand, Bukkit.getScheduler().runTaskTimer(ArmorStandEditor.getInstance(),
-                () -> armorStand.setRotation(player.getLocation().getYaw(), armorStand.getLocation().getPitch()), 0, 1)));
+        moving.put(player, new ArmorStandRotationMovement(armorStand, armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(),
+                _ -> armorStand.setRotation(player.getLocation().getYaw(), armorStand.getLocation().getPitch()), null, 1L, 1L)));
         runTask();
     }
 
@@ -506,7 +517,7 @@ public class Events implements Listener {
         if (!moving.containsKey(player))
             return;
 
-        Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), Events::runTask);
+        Bukkit.getGlobalRegionScheduler().run(ArmorStandEditor.getInstance(), _ -> Events.runTask());
         ArmorStandMovement movement = moving.get(player);
         if (movement instanceof ArmorStandPositionSnapInMovement snapInMovement) {
             snapInMovement.locations.clear();
@@ -634,7 +645,7 @@ public class Events implements Listener {
     public static class ArmorStandMovement {
 
         ArmorStand armorStand;
-        BukkitTask task;
+        ScheduledTask task;
 
         ArmorStandMovement(ArmorStand armorStand) {
             this.armorStand = armorStand;
@@ -644,7 +655,7 @@ public class Events implements Listener {
 
             Location originalLocation;
 
-            public ArmorStandPositionMovement(ArmorStand armorStand, BukkitTask task) {
+            public ArmorStandPositionMovement(ArmorStand armorStand, ScheduledTask task) {
                 super(armorStand);
                 this.task = task;
                 this.originalLocation = armorStand.getLocation();
@@ -720,7 +731,7 @@ public class Events implements Listener {
 
             float originalYaw;
 
-            public ArmorStandRotationMovement(ArmorStand armorStand, BukkitTask task) {
+            public ArmorStandRotationMovement(ArmorStand armorStand, ScheduledTask task) {
                 super(armorStand);
                 this.task = task;
                 this.originalYaw = armorStand.getLocation().getYaw();
@@ -800,6 +811,7 @@ public class Events implements Listener {
             else if (matrix[i] != null)
                 matrix[i] = matrix[i].clone();
         }
-        Bukkit.getScheduler().runTask(ArmorStandEditor.getInstance(), () -> inventory.setMatrix(matrix));
+
+        event.getWhoClicked().getScheduler().run(ArmorStandEditor.getInstance(), _ -> inventory.setMatrix(matrix), null);
     }
 }

@@ -18,3 +18,5 @@ permissions:
   armorstandeditor.reload:
     children:
       armorstandeditor: true
+
+folia-supported: true
