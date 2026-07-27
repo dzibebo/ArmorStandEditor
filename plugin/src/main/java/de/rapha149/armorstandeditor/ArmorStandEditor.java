@@ -36,7 +36,7 @@ public final class ArmorStandEditor extends JavaPlugin {
             return;
         }
 
-        loadMetrics();
+        // loadMetrics(); // Statistics disabled as requested
 
         if (Config.get().checkForUpdates) {
             Bukkit.getAsyncScheduler().runNow(this, _ -> {

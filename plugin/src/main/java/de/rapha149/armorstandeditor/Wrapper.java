@@ -6,9 +6,8 @@ import de.rapha149.armorstandeditor.version.VersionWrapper;
 import net.minecraft.core.Rotations;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.level.storage.TagValueOutput;
+
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.entity.CraftArmorStand;
@@ -36,12 +35,12 @@ public class Wrapper implements VersionWrapper {
     public void resetArmorStandBodyPart(org.bukkit.entity.ArmorStand armorStand, BodyPart bodyPart) {
         ArmorStand handle = ((CraftArmorStand) armorStand).getHandle();
         switch (bodyPart) {
-            case HEAD -> handle.setHeadPose(ArmorStand.DEFAULT_HEAD_POSE);
-            case BODY -> handle.setBodyPose(ArmorStand.DEFAULT_BODY_POSE);
-            case LEFT_ARM -> handle.setLeftArmPose(ArmorStand.DEFAULT_LEFT_ARM_POSE);
-            case RIGHT_ARM -> handle.setRightArmPose(ArmorStand.DEFAULT_RIGHT_ARM_POSE);
-            case LEFT_LEG -> handle.setLeftLegPose(ArmorStand.DEFAULT_LEFT_LEG_POSE);
-            case RIGHT_LEG -> handle.setRightLegPose(ArmorStand.DEFAULT_RIGHT_LEG_POSE);
+            case HEAD -> handle.setHeadPose(new Rotations(0f, 0f, 0f));
+            case BODY -> handle.setBodyPose(new Rotations(0f, 0f, 0f));
+            case LEFT_ARM -> handle.setLeftArmPose(new Rotations(-10f, 0f, -10f));
+            case RIGHT_ARM -> handle.setRightArmPose(new Rotations(-15f, 0f, 10f));
+            case LEFT_LEG -> handle.setLeftLegPose(new Rotations(-1f, 0f, -1f));
+            case RIGHT_LEG -> handle.setRightLegPose(new Rotations(1f, 0f, 1f));
         }
     }
 
@@ -52,36 +51,36 @@ public class Wrapper implements VersionWrapper {
         switch (bodyPart) {
             case HEAD:
                 currentAngle = handle.getHeadPose();
-                defaultAngle = ArmorStand.DEFAULT_HEAD_POSE;
+                defaultAngle = new Rotations(0f, 0f, 0f);
                 break;
             case BODY:
                 currentAngle = handle.getBodyPose();
-                defaultAngle = ArmorStand.DEFAULT_BODY_POSE;
+                defaultAngle = new Rotations(0f, 0f, 0f);
                 break;
             case LEFT_ARM:
                 currentAngle = handle.getLeftArmPose();
-                defaultAngle = ArmorStand.DEFAULT_LEFT_ARM_POSE;
+                defaultAngle = new Rotations(-10f, 0f, -10f);
                 break;
             case RIGHT_ARM:
                 currentAngle = handle.getRightArmPose();
-                defaultAngle = ArmorStand.DEFAULT_RIGHT_ARM_POSE;
+                defaultAngle = new Rotations(-15f, 0f, 10f);
                 break;
             case LEFT_LEG:
                 currentAngle = handle.getLeftLegPose();
-                defaultAngle = ArmorStand.DEFAULT_LEFT_LEG_POSE;
+                defaultAngle = new Rotations(-1f, 0f, -1f);
                 break;
             case RIGHT_LEG:
                 currentAngle = handle.getRightLegPose();
-                defaultAngle = ArmorStand.DEFAULT_RIGHT_LEG_POSE;
+                defaultAngle = new Rotations(1f, 0f, 1f);
                 break;
             default:
                 return;
         }
 
         Rotations newAngle = switch (axis) {
-            case X -> new Rotations(defaultAngle.x(), currentAngle.y(), currentAngle.z());
-            case Y -> new Rotations(currentAngle.x(), defaultAngle.y(), currentAngle.z());
-            case Z -> new Rotations(currentAngle.x(), currentAngle.y(), defaultAngle.z());
+            case X -> new Rotations(defaultAngle.getX(), currentAngle.getY(), currentAngle.getZ());
+            case Y -> new Rotations(currentAngle.getX(), defaultAngle.getY(), currentAngle.getZ());
+            case Z -> new Rotations(currentAngle.getX(), currentAngle.getY(), defaultAngle.getZ());
         };
         switch (bodyPart) {
             case HEAD -> handle.setHeadPose(newAngle);
@@ -96,9 +95,8 @@ public class Wrapper implements VersionWrapper {
     @Override
     public ItemStack getArmorstandItem(org.bukkit.entity.ArmorStand armorStand, NamespacedKey privateKey) {
         ArmorStand handle = ((CraftArmorStand) armorStand).getHandle();
-        TagValueOutput output = TagValueOutput.createWithoutContext(new ProblemReporter.Collector());
-        handle.saveWithoutId(output);
-        CompoundTag nbt = output.buildResult();
+        CompoundTag nbt = new CompoundTag();
+        handle.save(nbt);
         nbt.putString("id", "minecraft:armor_stand");
         nbt.remove("Pos");
         nbt.remove("UUID");
@@ -106,13 +104,21 @@ public class Wrapper implements VersionWrapper {
         nbt.remove("WorldUUIDMost");
         nbt.remove("Passengers");
 
-        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(new ItemStack(Material.ARMOR_STAND));
-        CompoundTag itemNBT = nmsItem.isEmpty() ? new CompoundTag() : (CompoundTag) net.minecraft.world.item.ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, nmsItem).getOrThrow();
-        CompoundTag components = itemNBT.getCompoundOrEmpty("components");
-        components.put("minecraft:entity_data", nbt);
-        itemNBT.put("components", components);
+        if (armorStand.isVisualFire()) {
+            net.minecraft.nbt.ListTag tags = nbt.contains("Tags", 9) ? nbt.getList("Tags", 8) : new net.minecraft.nbt.ListTag();
+            tags.add(net.minecraft.nbt.StringTag.valueOf(FIRE_TAG));
+            nbt.put("Tags", tags);
+        }
+        if (armorStand.isInvisible()) {
+            net.minecraft.nbt.ListTag tags = nbt.contains("Tags", 9) ? nbt.getList("Tags", 8) : new net.minecraft.nbt.ListTag();
+            tags.add(net.minecraft.nbt.StringTag.valueOf(INVISIBLE_TAG));
+            nbt.put("Tags", tags);
+        }
 
-        ItemStack item = CraftItemStack.asBukkitCopy(net.minecraft.world.item.ItemStack.CODEC.parse(NbtOps.INSTANCE, itemNBT).getOrThrow());
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(new ItemStack(Material.ARMOR_STAND));
+        nmsItem.set(net.minecraft.core.component.DataComponents.ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(nbt));
+
+        ItemStack item = CraftItemStack.asBukkitCopy(nmsItem);
         ItemMeta meta = item.getItemMeta();
         meta.setEnchantmentGlintOverride(true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -127,14 +133,13 @@ public class Wrapper implements VersionWrapper {
             return null;
 
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
-        CompoundTag nbt = nmsItem.isEmpty() ? new CompoundTag() : (CompoundTag) net.minecraft.world.item.ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, nmsItem).getOrThrow();
-        CompoundTag components = nbt.getCompoundOrEmpty("components");
-
-        if (components.contains("minecraft:entity_data")) {
-            CompoundTag entityNBT = components.getCompoundOrEmpty("minecraft:entity_data");
+        net.minecraft.world.item.component.CustomData customData = nmsItem.get(net.minecraft.core.component.DataComponents.ENTITY_DATA);
+        if (customData != null) {
+            CompoundTag entityNBT = customData.copyTag();
             entityNBT.remove("equipment");
+            nmsItem.set(net.minecraft.core.component.DataComponents.ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(entityNBT));
         }
 
-        return CraftItemStack.asBukkitCopy(net.minecraft.world.item.ItemStack.CODEC.parse(NbtOps.INSTANCE, nbt).getOrThrow());
+        return CraftItemStack.asBukkitCopy(nmsItem);
     }
 }

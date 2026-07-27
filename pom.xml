@@ -87,7 +87,11 @@
         </repository>
         <repository>
             <id>papermc</id>
-            <url>https://papermc.io/repo/repository/maven-public/</url>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>mvn-wesjd-net</id>
+            <url>https://mvn.wesjd.net/</url>
         </repository>
         <repository>
             <id>placeholderapi</id>
@@ -101,5 +105,16 @@
             <id>menthamc</id>
             <url>https://repo.menthamc.org/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>bytecode</id>
+            <url>https://repo.bytecode.space/repository/maven-public/</url>
+        </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>bytecode</id>
+            <url>https://repo.bytecode.space/repository/maven-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>

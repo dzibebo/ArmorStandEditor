@@ -620,7 +620,7 @@ public class Events implements Listener {
         boolean asPassenger = entry.getValue();
 
         if (leftClick) {
-            String key = "armorstands." + (asPassenger ? "passenger" : "vehicle") + ".choose.";
+            String key = "armorstands." + (asPassenger ? "passenger" : "vehicle") + ".choose";
             FeaturesData features = Config.get().features;
             if (!(asPassenger ? features.passenger : features.vehicle).players && entity instanceof Player) {
                 player.spigot().sendMessage(getMessage(key + ".no_players").spigot());

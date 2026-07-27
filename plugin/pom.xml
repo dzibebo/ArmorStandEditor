@@ -26,13 +26,13 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>26.1.2.build.64-stable</version>
+            <version>1.21-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>ca.bkaw</groupId>
             <artifactId>paper-nms</artifactId>
-            <version>26.1.2.build.64-stable-SNAPSHOT</version>
+            <version>1.21-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
-            <version>1.10.9-SNAPSHOT</version>
+            <version>1.10.13-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
