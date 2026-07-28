@@ -96,13 +96,27 @@ public class Wrapper implements VersionWrapper {
     public ItemStack getArmorstandItem(org.bukkit.entity.ArmorStand armorStand, NamespacedKey privateKey) {
         ArmorStand handle = ((CraftArmorStand) armorStand).getHandle();
         CompoundTag nbt = new CompoundTag();
-        handle.save(nbt);
+        try {
+            handle.save(nbt);
+        } catch (NoSuchMethodError e) {
+            try {
+                Class<?> problemReporterClass = Class.forName("net.minecraft.util.ProblemReporter");
+                Object discarding = problemReporterClass.getField("DISCARDING").get(null);
+                Class<?> tagValueOutputClass = Class.forName("net.minecraft.world.level.storage.TagValueOutput");
+                java.lang.reflect.Method createWrappingGlobal = tagValueOutputClass.getMethod("createWrappingGlobal", problemReporterClass, CompoundTag.class);
+                Object valueOutput = createWrappingGlobal.invoke(null, discarding, nbt);
+                java.lang.reflect.Method saveMethod = net.minecraft.world.entity.Entity.class.getMethod("save", Class.forName("net.minecraft.world.level.storage.ValueOutput"));
+                saveMethod.invoke(handle, valueOutput);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
         nbt.putString("id", "minecraft:armor_stand");
-        nbt.remove("Pos");
-        nbt.remove("UUID");
-        nbt.remove("WorldUUIDLeast");
-        nbt.remove("WorldUUIDMost");
-        nbt.remove("Passengers");
+        removeTag(nbt, "Pos");
+        removeTag(nbt, "UUID");
+        removeTag(nbt, "WorldUUIDLeast");
+        removeTag(nbt, "WorldUUIDMost");
+        removeTag(nbt, "Passengers");
 
         if (armorStand.isVisualFire()) {
             net.minecraft.nbt.ListTag tags = nbt.contains("Tags", 9) ? nbt.getList("Tags", 8) : new net.minecraft.nbt.ListTag();
@@ -127,6 +141,15 @@ public class Wrapper implements VersionWrapper {
         return item;
     }
 
+    private static void removeTag(CompoundTag tag, String key) {
+        try {
+            java.lang.reflect.Method removeMethod = CompoundTag.class.getMethod("remove", String.class);
+            removeMethod.invoke(tag, key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public ItemStack prepareRecipeResult(ItemStack item) {
         if (item.getType() != Material.ARMOR_STAND)
@@ -136,7 +159,7 @@ public class Wrapper implements VersionWrapper {
         net.minecraft.world.item.component.CustomData customData = nmsItem.get(net.minecraft.core.component.DataComponents.ENTITY_DATA);
         if (customData != null) {
             CompoundTag entityNBT = customData.copyTag();
-            entityNBT.remove("equipment");
+            removeTag(entityNBT, "equipment");
             nmsItem.set(net.minecraft.core.component.DataComponents.ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(entityNBT));
         }
 
