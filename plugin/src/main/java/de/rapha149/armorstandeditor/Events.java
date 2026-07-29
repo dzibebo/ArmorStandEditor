@@ -67,26 +67,108 @@ public class Events implements Listener {
         Bukkit.getGlobalRegionScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> Events.runTask(), 1L, 20L);
     }
 
+    private static final NamespacedKey KEY_INVISIBLE  = new NamespacedKey("armorstandeditor", "invisible");
+    private static final NamespacedKey KEY_FIRE       = new NamespacedKey("armorstandeditor", "fire");
+    private static final NamespacedKey KEY_SMALL      = new NamespacedKey("armorstandeditor", "small");
+    private static final NamespacedKey KEY_ARMS       = new NamespacedKey("armorstandeditor", "arms");
+    private static final NamespacedKey KEY_BASE_PLATE = new NamespacedKey("armorstandeditor", "base_plate");
+    private static final NamespacedKey KEY_GRAVITY    = new NamespacedKey("armorstandeditor", "gravity");
+    private static final NamespacedKey KEY_GLOWING    = new NamespacedKey("armorstandeditor", "glowing");
+    private static final NamespacedKey KEY_HEAD_POSE  = new NamespacedKey("armorstandeditor", "head_pose");
+    private static final NamespacedKey KEY_BODY_POSE  = new NamespacedKey("armorstandeditor", "body_pose");
+    private static final NamespacedKey KEY_LEFT_ARM   = new NamespacedKey("armorstandeditor", "left_arm");
+    private static final NamespacedKey KEY_RIGHT_ARM  = new NamespacedKey("armorstandeditor", "right_arm");
+    private static final NamespacedKey KEY_LEFT_LEG   = new NamespacedKey("armorstandeditor", "left_leg");
+    private static final NamespacedKey KEY_RIGHT_LEG  = new NamespacedKey("armorstandeditor", "right_leg");
+    private static final NamespacedKey KEY_HELMET     = new NamespacedKey("armorstandeditor", "helmet");
+    private static final NamespacedKey KEY_CHESTPLATE = new NamespacedKey("armorstandeditor", "chestplate");
+    private static final NamespacedKey KEY_LEGGINGS   = new NamespacedKey("armorstandeditor", "leggings");
+    private static final NamespacedKey KEY_BOOTS      = new NamespacedKey("armorstandeditor", "boots");
+    private static final NamespacedKey KEY_HAND       = new NamespacedKey("armorstandeditor", "hand");
+    private static final NamespacedKey KEY_OFFHAND    = new NamespacedKey("armorstandeditor", "offhand");
+
     @EventHandler
     public void onSpawn(EntitySpawnEvent event) {
-        if (event.getEntity() instanceof ArmorStand armorStand) {
-            if (armorStand.removeScoreboardTag(INVISIBLE_TAG)) {
-                armorStand.getScheduler().run(
-                        ArmorStandEditor.getInstance(),
-                        task -> armorStand.setInvisible(true),
-                        null
-                );
-            }
+        if (!(event.getEntity() instanceof ArmorStand armorStand))
+            return;
 
-            if (armorStand.removeScoreboardTag(FIRE_TAG)) {
-                armorStand.getScheduler().run(
-                        ArmorStandEditor.getInstance(),
-                        task -> armorStand.setVisualFire(true),
-                        null
-                );
+        var pdc = armorStand.getPersistentDataContainer();
+
+        // Check if this armor stand was placed from our special item (has our PDC data)
+        boolean hasData = pdc.has(KEY_INVISIBLE, PersistentDataType.BYTE)
+                       || pdc.has(KEY_FIRE, PersistentDataType.BYTE)
+                       || pdc.has(KEY_HEAD_POSE, PersistentDataType.STRING);
+
+        if (!hasData) {
+            // Legacy support: scoreboard tags
+            if (armorStand.removeScoreboardTag(INVISIBLE_TAG)) {
+                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
+                        task -> armorStand.setInvisible(true), null);
             }
+            if (armorStand.removeScoreboardTag(FIRE_TAG)) {
+                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
+                        task -> armorStand.setVisualFire(true), null);
+            }
+            return;
+        }
+
+        armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task -> {
+            applyByte(pdc, KEY_INVISIBLE,  v -> armorStand.setInvisible(v == 1));
+            applyByte(pdc, KEY_FIRE,       v -> armorStand.setVisualFire(v == 1));
+            applyByte(pdc, KEY_SMALL,      v -> armorStand.setSmall(v == 1));
+            applyByte(pdc, KEY_ARMS,       v -> armorStand.setArms(v == 1));
+            applyByte(pdc, KEY_BASE_PLATE, v -> armorStand.setBasePlate(v == 1));
+            applyByte(pdc, KEY_GRAVITY,    v -> armorStand.setGravity(v == 1));
+            applyByte(pdc, KEY_GLOWING,    v -> armorStand.setGlowing(v == 1));
+
+            applyAngle(pdc, KEY_HEAD_POSE,  a -> armorStand.setHeadPose(a));
+            applyAngle(pdc, KEY_BODY_POSE,  a -> armorStand.setBodyPose(a));
+            applyAngle(pdc, KEY_LEFT_ARM,   a -> armorStand.setLeftArmPose(a));
+            applyAngle(pdc, KEY_RIGHT_ARM,  a -> armorStand.setRightArmPose(a));
+            applyAngle(pdc, KEY_LEFT_LEG,   a -> armorStand.setLeftLegPose(a));
+            applyAngle(pdc, KEY_RIGHT_LEG,  a -> armorStand.setRightLegPose(a));
+
+            var equipment = armorStand.getEquipment();
+            applyEquip(pdc, KEY_HELMET,     s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.HEAD,     s));
+            applyEquip(pdc, KEY_CHESTPLATE, s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.CHEST,    s));
+            applyEquip(pdc, KEY_LEGGINGS,   s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.LEGS,     s));
+            applyEquip(pdc, KEY_BOOTS,      s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.FEET,     s));
+            applyEquip(pdc, KEY_HAND,       s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.HAND,     s));
+            applyEquip(pdc, KEY_OFFHAND,    s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.OFF_HAND, s));
+
+            // Clean up PDC keys so they don't persist on the entity unnecessarily
+            pdc.remove(KEY_INVISIBLE);  pdc.remove(KEY_FIRE);       pdc.remove(KEY_SMALL);
+            pdc.remove(KEY_ARMS);       pdc.remove(KEY_BASE_PLATE); pdc.remove(KEY_GRAVITY);
+            pdc.remove(KEY_GLOWING);    pdc.remove(KEY_HEAD_POSE);  pdc.remove(KEY_BODY_POSE);
+            pdc.remove(KEY_LEFT_ARM);   pdc.remove(KEY_RIGHT_ARM);  pdc.remove(KEY_LEFT_LEG);
+            pdc.remove(KEY_RIGHT_LEG);  pdc.remove(KEY_HELMET);     pdc.remove(KEY_CHESTPLATE);
+            pdc.remove(KEY_LEGGINGS);   pdc.remove(KEY_BOOTS);      pdc.remove(KEY_HAND);
+            pdc.remove(KEY_OFFHAND);
+        }, null);
+    }
+
+    private static void applyByte(org.bukkit.persistence.PersistentDataContainer pdc, NamespacedKey key,
+                                  java.util.function.Consumer<Byte> consumer) {
+        Byte val = pdc.get(key, PersistentDataType.BYTE);
+        if (val != null) consumer.accept(val);
+    }
+
+    private static void applyAngle(org.bukkit.persistence.PersistentDataContainer pdc, NamespacedKey key,
+                                   java.util.function.Consumer<org.bukkit.util.EulerAngle> consumer) {
+        String val = pdc.get(key, PersistentDataType.STRING);
+        if (val != null) {
+            String[] parts = val.split(",");
+            consumer.accept(new org.bukkit.util.EulerAngle(
+                    Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2])));
         }
     }
+
+    private static void applyEquip(org.bukkit.persistence.PersistentDataContainer pdc, NamespacedKey key,
+                                   java.util.function.Consumer<org.bukkit.inventory.ItemStack> consumer) {
+        byte[] bytes = pdc.get(key, PersistentDataType.BYTE_ARRAY);
+        if (bytes != null) consumer.accept(org.bukkit.inventory.ItemStack.deserializeBytes(bytes));
+    }
+
 
     @EventHandler
     public void onInteractAtEntity(PlayerInteractAtEntityEvent event) {
