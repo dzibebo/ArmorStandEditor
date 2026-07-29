@@ -715,10 +715,14 @@ public class Events implements Listener {
                 return;
             }
 
-            if (asPassenger)
-                entity.addPassenger(armorStand);
-            else
-                armorStand.addPassenger(entity);
+            // Folia/Leaf: addPassenger must run on entity's thread
+            if (asPassenger) {
+                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task ->
+                        entity.addPassenger(armorStand), null);
+            } else {
+                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task ->
+                        armorStand.addPassenger(entity), null);
+            }
             Util.playExperienceSound(player);
         } else
             Util.playArmorStandBreakSound(player);

@@ -123,14 +123,16 @@ public class AdvancedPoseBodyPartPage extends Page {
             boolean zero = entry.getValue();
             gui.setItem(2, col.getAndIncrement(), applyNameAndLore(ItemBuilder.from(mat),
                     KEY + "bodypart.reset.button." + (zero ? "zero" : "default"), Map.of("%axis%", axis.toString())).asGuiItem(event -> {
-                if (zero)
-                    bodyPart.set(armorStand, axis.setValue(bodyPart.get(armorStand), 0));
-                else
-                    wrapper.resetArmorStandBodyPart(armorStand, bodyPart, axis);
-                playSpyglassSound(player);
+                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), scheduledTask -> {
+                    if (zero)
+                        bodyPart.set(armorStand, axis.setValue(bodyPart.get(armorStand), 0));
+                    else
+                        wrapper.resetArmorStandBodyPart(armorStand, bodyPart, axis);
 
-                currentPose[axis.ordinal()] = Math.round(getRotation(axis.getValueDegrees(bodyPart.get(armorStand))));
-                setCurrentPoseItem(gui, armorStand);
+                    currentPose[axis.ordinal()] = Math.round(getRotation(axis.getValueDegrees(bodyPart.get(armorStand))));
+                    setCurrentPoseItem(gui, armorStand);
+                }, null);
+                playSpyglassSound(player);
             }));
         });
 
@@ -152,13 +154,15 @@ public class AdvancedPoseBodyPartPage extends Page {
                     "%axis%", axis.toString(),
                     "%amount%", String.valueOf(amount))
             ).asGuiItem(event -> {
-                EulerAngle angle = bodyPart.get(armorStand);
-                angle = axis.setValueDegrees(angle, getRotation(axis.getValueDegrees(angle) + amount * (event.isLeftClick() ? 1 : -1)));
-                bodyPart.set(armorStand, angle);
-                playSpyglassSound(player);
+                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), scheduledTask -> {
+                    EulerAngle angle = bodyPart.get(armorStand);
+                    EulerAngle newAngle = axis.setValueDegrees(angle, getRotation(axis.getValueDegrees(angle) + amount * (event.isLeftClick() ? 1 : -1)));
+                    bodyPart.set(armorStand, newAngle);
 
-                currentPose[axis.ordinal()] = Math.round(axis.getValueDegrees(angle));
-                setCurrentPoseItem(gui, armorStand);
+                    currentPose[axis.ordinal()] = Math.round(axis.getValueDegrees(newAngle));
+                    setCurrentPoseItem(gui, armorStand);
+                }, null);
+                playSpyglassSound(player);
             })));
         }
 
