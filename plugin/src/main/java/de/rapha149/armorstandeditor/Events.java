@@ -652,7 +652,7 @@ public class Events implements Listener {
 
         if (vehicleSelection.containsKey(player)) {
             event.setCancelled(true);
-            onVehicleSelectionInteraction(player, null, false);
+            onVehicleSelectionInteraction(player, event.getRightClicked(), true);
         }
     }
 
