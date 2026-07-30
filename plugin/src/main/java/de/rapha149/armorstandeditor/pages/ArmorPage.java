@@ -104,8 +104,7 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.HEAD);
                 });
             } else if (event.isRightClick()) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.HEAD), null);
+                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.HEAD);
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -116,8 +115,7 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.RIGHT_ARM);
                 });
             } else if (event.isRightClick()) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_ARM), null);
+                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_ARM);
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -128,8 +126,7 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.BODY);
                 });
             } else if (event.isRightClick()) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.BODY), null);
+                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.BODY);
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -140,8 +137,7 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.LEFT_ARM);
                 });
             } else if (event.isRightClick()) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_ARM), null);
+                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_ARM);
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -152,8 +148,7 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.RIGHT_LEG);
                 });
             } else if (event.isRightClick()) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_LEG), null);
+                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_LEG);
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -164,8 +159,7 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.LEFT_LEG);
                 });
             } else if (event.isRightClick()) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_LEG), null);
+                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_LEG);
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -227,18 +221,13 @@ public class ArmorPage extends Page {
                 });
             } else {
                 if (event.getClick() == ClickType.CONTROL_DROP) {
-                    armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task -> {
-                        armorStand.setRotation(0, armorStand.getLocation().getPitch());
-                    }, null);
+                    armorStand.setRotation(0, armorStand.getLocation().getPitch());
                     playExperienceSound(player);
                 } else {
                     int amount = event.isShiftClick() ? 10 : 45;
                     if (event.isRightClick())
                         amount *= -1;
-                    final int finalAmount = amount;
-                    armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task -> {
-                        armorStand.setRotation(getRotation(armorStand.getLocation().getYaw() + finalAmount), armorStand.getLocation().getPitch());
-                    }, null);
+                    armorStand.setRotation(getRotation(armorStand.getLocation().getYaw() + amount), armorStand.getLocation().getPitch());
                     playStepSound(player);
                 }
 

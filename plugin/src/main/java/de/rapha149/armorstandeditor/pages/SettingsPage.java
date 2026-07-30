@@ -132,13 +132,11 @@ public class SettingsPage extends Page {
                             Events.runTask();
                         });
                     } else if (event.isRightClick()) {
-                        armorStand.getScheduler().run(ArmorStandEditor.getInstance(), scheduledTask -> {
-                            if (armorStand.eject()) {
-                                playExperienceSound(player);
-                                gui.updateItem(4, 8, applyNameAndLore(ItemBuilder.from(Material.LEAD), "armorstands.vehicle").glow(false).build());
-                            } else
-                                playBassSound(player);
-                        }, null);
+                        if (armorStand.eject()) {
+                            playExperienceSound(player);
+                            gui.updateItem(4, 8, applyNameAndLore(ItemBuilder.from(Material.LEAD), "armorstands.vehicle").glow(false).build());
+                        } else
+                            playBassSound(player);
                     }
                 }), features.vehicle, player));
 
@@ -156,13 +154,11 @@ public class SettingsPage extends Page {
                             Events.runTask();
                         });
                     } else if (event.isRightClick()) {
-                        armorStand.getScheduler().run(ArmorStandEditor.getInstance(), scheduledTask -> {
-                            if (armorStand.leaveVehicle()) {
-                                playExperienceSound(player);
-                                gui.updateItem(5, 8, applyNameAndLore(ItemBuilder.from(Material.SADDLE), "armorstands.passenger").glow(false).build());
-                            } else
-                                playBassSound(player);
-                        }, null);
+                        if (armorStand.leaveVehicle()) {
+                            playExperienceSound(player);
+                            gui.updateItem(5, 8, applyNameAndLore(ItemBuilder.from(Material.SADDLE), "armorstands.passenger").glow(false).build());
+                        } else
+                            playBassSound(player);
                     }
                 }), features.passenger, player));
 
@@ -213,14 +209,12 @@ public class SettingsPage extends Page {
             gui.updateItem(row, col, checkDeactivated(applyNameAndLore(ItemBuilder.from(Material.HONEYCOMB), "armorstands.lock." + key,
                     "armorstands.lock.lore", disabled).glow(disabled).asGuiItem(event -> {
                 playSpyglassSound(player);
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task -> {
-                    if (disabled)
-                        for (LockType type : LockType.values())
-                            armorStand.removeEquipmentLock(slot, type);
-                    else
-                        for (LockType type : LockType.values())
-                            armorStand.addEquipmentLock(slot, type);
-                }, null);
+                if (disabled)
+                    for (LockType type : LockType.values())
+                        armorStand.removeEquipmentLock(slot, type);
+                else
+                    for (LockType type : LockType.values())
+                        armorStand.addEquipmentLock(slot, type);
 
                 setDisabledSlotItem(player, gui, armorStand, slot, !disabled);
             }), Config.get().features.disabledSlots, player));
@@ -298,19 +292,16 @@ public class SettingsPage extends Page {
             playSpyglassSound(player);
 
             boolean newEnabled = !enabled;
-            // Folia/Leaf: entity modifications MUST run on the entity's scheduler thread
-            armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task -> {
-                switch (index) {
-                    case 0 -> armorStand.setInvisible(newEnabled);
-                    case 1 -> armorStand.setArms(newEnabled);
-                    case 2 -> armorStand.setBasePlate(newEnabled);
-                    case 3 -> armorStand.setInvulnerable(newEnabled);
-                    case 4 -> armorStand.setGravity(newEnabled);
-                    case 5 -> armorStand.setSmall(newEnabled);
-                    case 6 -> armorStand.setGlowing(newEnabled);
-                    case 7 -> armorStand.setVisualFire(newEnabled);
-                }
-            }, null);
+            switch (index) {
+                case 0 -> armorStand.setInvisible(newEnabled);
+                case 1 -> armorStand.setArms(newEnabled);
+                case 2 -> armorStand.setBasePlate(newEnabled);
+                case 3 -> armorStand.setInvulnerable(newEnabled);
+                case 4 -> armorStand.setGravity(newEnabled);
+                case 5 -> armorStand.setSmall(newEnabled);
+                case 6 -> armorStand.setGlowing(newEnabled);
+                case 7 -> armorStand.setVisualFire(newEnabled);
+            }
 
             setSettingsItem(player, gui, armorStand, index, newEnabled);
         }), feature, player));

@@ -715,13 +715,11 @@ public class Events implements Listener {
                 return;
             }
 
-            // Folia/Leaf: addPassenger must run on entity's thread
+            // Apply passenger/vehicle directly — same region as player since they just interacted
             if (asPassenger) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task ->
-                        entity.addPassenger(armorStand), null);
+                entity.addPassenger(armorStand);
             } else {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task ->
-                        armorStand.addPassenger(entity), null);
+                armorStand.addPassenger(entity);
             }
             Util.playExperienceSound(player);
         } else
