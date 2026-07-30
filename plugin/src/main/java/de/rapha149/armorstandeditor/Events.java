@@ -641,10 +641,6 @@ public class Events implements Listener {
 
     @EventHandler
     public void onInteraction(PlayerInteractEntityEvent event) {
-        // Skip PlayerInteractAtEntityEvent — it's handled by onInteractAtEntity to avoid double-processing
-        if (event.getClass() != PlayerInteractEntityEvent.class)
-            return;
-
         Player player = event.getPlayer();
         if (moving.containsKey(player)) {
             event.setCancelled(true);
@@ -716,11 +712,15 @@ public class Events implements Listener {
                 return;
             }
 
-            // Apply passenger/vehicle directly — same region as player since they just interacted
+            // Use RegionScheduler to guarantee correct thread regardless of what thread GUI events fire on
             if (asPassenger) {
-                entity.addPassenger(armorStand);
+                Location vehicleLoc = entity.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), vehicleLoc,
+                        task -> entity.addPassenger(armorStand));
             } else {
-                armorStand.addPassenger(entity);
+                Location standLoc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), standLoc,
+                        task -> armorStand.addPassenger(entity));
             }
             Util.playExperienceSound(player);
         } else

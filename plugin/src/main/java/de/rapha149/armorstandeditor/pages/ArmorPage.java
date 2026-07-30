@@ -104,7 +104,9 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.HEAD);
                 });
             } else if (event.isRightClick()) {
-                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.HEAD);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc,
+                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.HEAD));
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -115,7 +117,9 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.RIGHT_ARM);
                 });
             } else if (event.isRightClick()) {
-                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_ARM);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc,
+                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_ARM));
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -126,7 +130,9 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.BODY);
                 });
             } else if (event.isRightClick()) {
-                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.BODY);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc,
+                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.BODY));
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -137,7 +143,9 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.LEFT_ARM);
                 });
             } else if (event.isRightClick()) {
-                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_ARM);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc,
+                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_ARM));
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -148,7 +156,9 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.RIGHT_LEG);
                 });
             } else if (event.isRightClick()) {
-                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_LEG);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc,
+                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.RIGHT_LEG));
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -159,7 +169,9 @@ public class ArmorPage extends Page {
                     Events.startMoveBodyPart(player, armorStand, BodyPart.LEFT_LEG);
                 });
             } else if (event.isRightClick()) {
-                wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_LEG);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc,
+                        task -> wrapper.resetArmorStandBodyPart(armorStand, BodyPart.LEFT_LEG));
                 playArmorStandHitSound(player);
             }
         }), features.moveBodyParts, player));
@@ -221,13 +233,19 @@ public class ArmorPage extends Page {
                 });
             } else {
                 if (event.getClick() == ClickType.CONTROL_DROP) {
-                    armorStand.setRotation(0, armorStand.getLocation().getPitch());
+                    Location loc = armorStand.getLocation().clone();
+                    Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc, task ->
+                            armorStand.setRotation(0, armorStand.getLocation().getPitch()));
                     playExperienceSound(player);
                 } else {
                     int amount = event.isShiftClick() ? 10 : 45;
                     if (event.isRightClick())
                         amount *= -1;
-                    armorStand.setRotation(getRotation(armorStand.getLocation().getYaw() + amount), armorStand.getLocation().getPitch());
+                    final int finalAmount = amount;
+                    Location loc = armorStand.getLocation().clone();
+                    Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc, task ->
+                            armorStand.setRotation(getRotation(armorStand.getLocation().getYaw() + finalAmount),
+                                    armorStand.getLocation().getPitch()));
                     playStepSound(player);
                 }
 

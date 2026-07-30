@@ -8,6 +8,8 @@ import dev.triumphteam.gui.builder.item.ItemBuilder;
 import dev.triumphteam.gui.guis.Gui;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
@@ -99,7 +101,8 @@ public class AdvancedPoseBodyPartPage extends Page {
                     Math.round(getRotation(angle.getZ()))
             };
         }
-        ScheduledTask task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _-> {
+        Location standLoc = armorStand.getLocation().clone();
+        ScheduledTask task = Bukkit.getRegionScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), standLoc, _-> {
             for (BodyPart bodyPart : BodyPart.values()) {
                 EulerAngle angle = bodyPart.get(armorStand);
                 Long[] actual = {
@@ -112,7 +115,7 @@ public class AdvancedPoseBodyPartPage extends Page {
                     setCurrentPoseItem(gui, armorStand);
                 }
             }
-        }, null, 40L, 40L);
+        }, 40L, 40L);
 
         setCurrentPoseItem(gui, armorStand);
 
@@ -123,14 +126,17 @@ public class AdvancedPoseBodyPartPage extends Page {
             boolean zero = entry.getValue();
             gui.setItem(2, col.getAndIncrement(), applyNameAndLore(ItemBuilder.from(mat),
                     KEY + "bodypart.reset.button." + (zero ? "zero" : "default"), Map.of("%axis%", axis.toString())).asGuiItem(event -> {
-                if (zero)
-                    bodyPart.set(armorStand, axis.setValue(bodyPart.get(armorStand), 0));
-                else
-                    wrapper.resetArmorStandBodyPart(armorStand, bodyPart, axis);
-                playSpyglassSound(player);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc, t -> {
+                    if (zero)
+                        bodyPart.set(armorStand, axis.setValue(bodyPart.get(armorStand), 0));
+                    else
+                        wrapper.resetArmorStandBodyPart(armorStand, bodyPart, axis);
 
-                currentPose[axis.ordinal()] = Math.round(getRotation(axis.getValueDegrees(bodyPart.get(armorStand))));
-                setCurrentPoseItem(gui, armorStand);
+                    currentPose[axis.ordinal()] = Math.round(getRotation(axis.getValueDegrees(bodyPart.get(armorStand))));
+                    setCurrentPoseItem(gui, armorStand);
+                });
+                playSpyglassSound(player);
             }));
         });
 
@@ -152,13 +158,16 @@ public class AdvancedPoseBodyPartPage extends Page {
                     "%axis%", axis.toString(),
                     "%amount%", String.valueOf(amount))
             ).asGuiItem(event -> {
-                EulerAngle angle = bodyPart.get(armorStand);
-                EulerAngle newAngle = axis.setValueDegrees(angle, getRotation(axis.getValueDegrees(angle) + amount * (event.isLeftClick() ? 1 : -1)));
-                bodyPart.set(armorStand, newAngle);
-                playSpyglassSound(player);
+                Location loc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), loc, t -> {
+                    EulerAngle angle = bodyPart.get(armorStand);
+                    EulerAngle newAngle = axis.setValueDegrees(angle, getRotation(axis.getValueDegrees(angle) + amount * (event.isLeftClick() ? 1 : -1)));
+                    bodyPart.set(armorStand, newAngle);
 
-                currentPose[axis.ordinal()] = Math.round(axis.getValueDegrees(newAngle));
-                setCurrentPoseItem(gui, armorStand);
+                    currentPose[axis.ordinal()] = Math.round(axis.getValueDegrees(newAngle));
+                    setCurrentPoseItem(gui, armorStand);
+                });
+                playSpyglassSound(player);
             })));
         }
 

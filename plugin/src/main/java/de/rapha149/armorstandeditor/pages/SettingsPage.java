@@ -25,6 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.Location;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -49,7 +50,8 @@ public class SettingsPage extends Page {
                 .allMatch(type -> armorStand.hasEquipmentLock(slot, type))).collect(Collectors.toList());
         boolean[] settings = getSettings(armorStand);
 
-        ScheduledTask task = armorStand.getScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> {
+        Location standLocForTask = armorStand.getLocation().clone();
+        ScheduledTask task = Bukkit.getRegionScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), standLocForTask, _ -> {
             boolean update = false;
             List<EquipmentSlot> currentDisabled = Arrays.stream(EquipmentSlot.values()).filter(slot -> Arrays.stream(LockType.values())
                     .allMatch(type -> armorStand.hasEquipmentLock(slot, type))).toList();
@@ -77,7 +79,7 @@ public class SettingsPage extends Page {
 
             if (update)
                 gui.update();
-        }, null, 40L, 40L);
+        }, 40L, 40L);
 
         setDisabledSlotItem(player, gui, armorStand, EquipmentSlot.HEAD, disabled.contains(EquipmentSlot.HEAD));
         setDisabledSlotItem(player, gui, armorStand, EquipmentSlot.CHEST, disabled.contains(EquipmentSlot.CHEST));
@@ -132,11 +134,14 @@ public class SettingsPage extends Page {
                             Events.runTask();
                         });
                     } else if (event.isRightClick()) {
-                        if (armorStand.eject()) {
-                            playExperienceSound(player);
-                            gui.updateItem(4, 8, applyNameAndLore(ItemBuilder.from(Material.LEAD), "armorstands.vehicle").glow(false).build());
-                        } else
-                            playBassSound(player);
+                        Location standLoc = armorStand.getLocation().clone();
+                        Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), standLoc, sTask -> {
+                            if (armorStand.eject()) {
+                                playExperienceSound(player);
+                                gui.updateItem(4, 8, applyNameAndLore(ItemBuilder.from(Material.LEAD), "armorstands.vehicle").glow(false).build());
+                            } else
+                                playBassSound(player);
+                        });
                     }
                 }), features.vehicle, player));
 
@@ -154,11 +159,14 @@ public class SettingsPage extends Page {
                             Events.runTask();
                         });
                     } else if (event.isRightClick()) {
-                        if (armorStand.leaveVehicle()) {
-                            playExperienceSound(player);
-                            gui.updateItem(5, 8, applyNameAndLore(ItemBuilder.from(Material.SADDLE), "armorstands.passenger").glow(false).build());
-                        } else
-                            playBassSound(player);
+                        Location standLoc = armorStand.getLocation().clone();
+                        Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), standLoc, sTask -> {
+                            if (armorStand.leaveVehicle()) {
+                                playExperienceSound(player);
+                                gui.updateItem(5, 8, applyNameAndLore(ItemBuilder.from(Material.SADDLE), "armorstands.passenger").glow(false).build());
+                            } else
+                                playBassSound(player);
+                        });
                     }
                 }), features.passenger, player));
 
@@ -209,12 +217,15 @@ public class SettingsPage extends Page {
             gui.updateItem(row, col, checkDeactivated(applyNameAndLore(ItemBuilder.from(Material.HONEYCOMB), "armorstands.lock." + key,
                     "armorstands.lock.lore", disabled).glow(disabled).asGuiItem(event -> {
                 playSpyglassSound(player);
-                if (disabled)
-                    for (LockType type : LockType.values())
-                        armorStand.removeEquipmentLock(slot, type);
-                else
-                    for (LockType type : LockType.values())
-                        armorStand.addEquipmentLock(slot, type);
+                Location standLoc = armorStand.getLocation().clone();
+                Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), standLoc, sTask -> {
+                    if (disabled)
+                        for (LockType type : LockType.values())
+                            armorStand.removeEquipmentLock(slot, type);
+                    else
+                        for (LockType type : LockType.values())
+                            armorStand.addEquipmentLock(slot, type);
+                });
 
                 setDisabledSlotItem(player, gui, armorStand, slot, !disabled);
             }), Config.get().features.disabledSlots, player));
@@ -292,16 +303,20 @@ public class SettingsPage extends Page {
             playSpyglassSound(player);
 
             boolean newEnabled = !enabled;
-            switch (index) {
-                case 0 -> armorStand.setInvisible(newEnabled);
-                case 1 -> armorStand.setArms(newEnabled);
-                case 2 -> armorStand.setBasePlate(newEnabled);
-                case 3 -> armorStand.setInvulnerable(newEnabled);
-                case 4 -> armorStand.setGravity(newEnabled);
-                case 5 -> armorStand.setSmall(newEnabled);
-                case 6 -> armorStand.setGlowing(newEnabled);
-                case 7 -> armorStand.setVisualFire(newEnabled);
-            }
+            // Use RegionScheduler — GUI events in Leaf may fire on global thread, not entity's region thread
+            Location standLoc = armorStand.getLocation().clone();
+            Bukkit.getRegionScheduler().run(ArmorStandEditor.getInstance(), standLoc, sTask -> {
+                switch (index) {
+                    case 0 -> armorStand.setInvisible(newEnabled);
+                    case 1 -> armorStand.setArms(newEnabled);
+                    case 2 -> armorStand.setBasePlate(newEnabled);
+                    case 3 -> armorStand.setInvulnerable(newEnabled);
+                    case 4 -> armorStand.setGravity(newEnabled);
+                    case 5 -> armorStand.setSmall(newEnabled);
+                    case 6 -> armorStand.setGlowing(newEnabled);
+                    case 7 -> armorStand.setVisualFire(newEnabled);
+                }
+            });
 
             setSettingsItem(player, gui, armorStand, index, newEnabled);
         }), feature, player));
