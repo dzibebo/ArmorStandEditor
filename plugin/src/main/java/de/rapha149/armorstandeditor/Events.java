@@ -60,8 +60,8 @@ public class Events implements Listener {
     private final String FIRE_TAG = "ArmorStandEditor-Fire";
     private final List<Double> SNAP_IN_DISTANCES = List.of(0.5D, 1.0D, 1.5D, 2D, 3D, 4D, 5D);
 
-    public static final Map<Player, ArmorStandMovement> moving = new HashMap<>();
-    public static final Map<Player, Entry<ArmorStand, Boolean>> vehicleSelection = new HashMap<>();
+    public static final Map<Player, ArmorStandMovement> moving = new java.util.concurrent.ConcurrentHashMap<>();
+    public static final Map<Player, Entry<ArmorStand, Boolean>> vehicleSelection = new java.util.concurrent.ConcurrentHashMap<>();
 
     public Events() {
         Bukkit.getGlobalRegionScheduler().runAtFixedRate(ArmorStandEditor.getInstance(), _ -> Events.runTask(), 1L, 20L);
@@ -100,51 +100,48 @@ public class Events implements Listener {
                        || pdc.has(KEY_HEAD_POSE, PersistentDataType.STRING);
 
         if (!hasData) {
-            // Legacy support: scoreboard tags
+            // Legacy support: scoreboard tags — direct calls safe in EntitySpawnEvent context
             if (armorStand.removeScoreboardTag(INVISIBLE_TAG)) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> armorStand.setInvisible(true), null);
+                armorStand.setInvisible(true);
             }
             if (armorStand.removeScoreboardTag(FIRE_TAG)) {
-                armorStand.getScheduler().run(ArmorStandEditor.getInstance(),
-                        task -> armorStand.setVisualFire(true), null);
+                armorStand.setVisualFire(true);
             }
             return;
         }
 
-        armorStand.getScheduler().run(ArmorStandEditor.getInstance(), task -> {
-            applyByte(pdc, KEY_INVISIBLE,  v -> armorStand.setInvisible(v == 1));
-            applyByte(pdc, KEY_FIRE,       v -> armorStand.setVisualFire(v == 1));
-            applyByte(pdc, KEY_SMALL,      v -> armorStand.setSmall(v == 1));
-            applyByte(pdc, KEY_ARMS,       v -> armorStand.setArms(v == 1));
-            applyByte(pdc, KEY_BASE_PLATE, v -> armorStand.setBasePlate(v == 1));
-            applyByte(pdc, KEY_GRAVITY,    v -> armorStand.setGravity(v == 1));
-            applyByte(pdc, KEY_GLOWING,    v -> armorStand.setGlowing(v == 1));
+        // Apply PDC data directly — EntitySpawnEvent fires on the entity's region thread
+        applyByte(pdc, KEY_INVISIBLE,  v -> armorStand.setInvisible(v == 1));
+        applyByte(pdc, KEY_FIRE,       v -> armorStand.setVisualFire(v == 1));
+        applyByte(pdc, KEY_SMALL,      v -> armorStand.setSmall(v == 1));
+        applyByte(pdc, KEY_ARMS,       v -> armorStand.setArms(v == 1));
+        applyByte(pdc, KEY_BASE_PLATE, v -> armorStand.setBasePlate(v == 1));
+        applyByte(pdc, KEY_GRAVITY,    v -> armorStand.setGravity(v == 1));
+        applyByte(pdc, KEY_GLOWING,    v -> armorStand.setGlowing(v == 1));
 
-            applyAngle(pdc, KEY_HEAD_POSE,  a -> armorStand.setHeadPose(a));
-            applyAngle(pdc, KEY_BODY_POSE,  a -> armorStand.setBodyPose(a));
-            applyAngle(pdc, KEY_LEFT_ARM,   a -> armorStand.setLeftArmPose(a));
-            applyAngle(pdc, KEY_RIGHT_ARM,  a -> armorStand.setRightArmPose(a));
-            applyAngle(pdc, KEY_LEFT_LEG,   a -> armorStand.setLeftLegPose(a));
-            applyAngle(pdc, KEY_RIGHT_LEG,  a -> armorStand.setRightLegPose(a));
+        applyAngle(pdc, KEY_HEAD_POSE,  a -> armorStand.setHeadPose(a));
+        applyAngle(pdc, KEY_BODY_POSE,  a -> armorStand.setBodyPose(a));
+        applyAngle(pdc, KEY_LEFT_ARM,   a -> armorStand.setLeftArmPose(a));
+        applyAngle(pdc, KEY_RIGHT_ARM,  a -> armorStand.setRightArmPose(a));
+        applyAngle(pdc, KEY_LEFT_LEG,   a -> armorStand.setLeftLegPose(a));
+        applyAngle(pdc, KEY_RIGHT_LEG,  a -> armorStand.setRightLegPose(a));
 
-            var equipment = armorStand.getEquipment();
-            applyEquip(pdc, KEY_HELMET,     s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.HEAD,     s));
-            applyEquip(pdc, KEY_CHESTPLATE, s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.CHEST,    s));
-            applyEquip(pdc, KEY_LEGGINGS,   s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.LEGS,     s));
-            applyEquip(pdc, KEY_BOOTS,      s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.FEET,     s));
-            applyEquip(pdc, KEY_HAND,       s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.HAND,     s));
-            applyEquip(pdc, KEY_OFFHAND,    s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.OFF_HAND, s));
+        var equipment = armorStand.getEquipment();
+        applyEquip(pdc, KEY_HELMET,     s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.HEAD,     s));
+        applyEquip(pdc, KEY_CHESTPLATE, s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.CHEST,    s));
+        applyEquip(pdc, KEY_LEGGINGS,   s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.LEGS,     s));
+        applyEquip(pdc, KEY_BOOTS,      s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.FEET,     s));
+        applyEquip(pdc, KEY_HAND,       s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.HAND,     s));
+        applyEquip(pdc, KEY_OFFHAND,    s -> equipment.setItem(org.bukkit.inventory.EquipmentSlot.OFF_HAND, s));
 
-            // Clean up PDC keys so they don't persist on the entity unnecessarily
-            pdc.remove(KEY_INVISIBLE);  pdc.remove(KEY_FIRE);       pdc.remove(KEY_SMALL);
-            pdc.remove(KEY_ARMS);       pdc.remove(KEY_BASE_PLATE); pdc.remove(KEY_GRAVITY);
-            pdc.remove(KEY_GLOWING);    pdc.remove(KEY_HEAD_POSE);  pdc.remove(KEY_BODY_POSE);
-            pdc.remove(KEY_LEFT_ARM);   pdc.remove(KEY_RIGHT_ARM);  pdc.remove(KEY_LEFT_LEG);
-            pdc.remove(KEY_RIGHT_LEG);  pdc.remove(KEY_HELMET);     pdc.remove(KEY_CHESTPLATE);
-            pdc.remove(KEY_LEGGINGS);   pdc.remove(KEY_BOOTS);      pdc.remove(KEY_HAND);
-            pdc.remove(KEY_OFFHAND);
-        }, null);
+        // Clean up PDC keys so they don't persist on the entity unnecessarily
+        pdc.remove(KEY_INVISIBLE);  pdc.remove(KEY_FIRE);       pdc.remove(KEY_SMALL);
+        pdc.remove(KEY_ARMS);       pdc.remove(KEY_BASE_PLATE); pdc.remove(KEY_GRAVITY);
+        pdc.remove(KEY_GLOWING);    pdc.remove(KEY_HEAD_POSE);  pdc.remove(KEY_BODY_POSE);
+        pdc.remove(KEY_LEFT_ARM);   pdc.remove(KEY_RIGHT_ARM);  pdc.remove(KEY_LEFT_LEG);
+        pdc.remove(KEY_RIGHT_LEG);  pdc.remove(KEY_HELMET);     pdc.remove(KEY_CHESTPLATE);
+        pdc.remove(KEY_LEGGINGS);   pdc.remove(KEY_BOOTS);      pdc.remove(KEY_HAND);
+        pdc.remove(KEY_OFFHAND);
     }
 
     private static void applyByte(org.bukkit.persistence.PersistentDataContainer pdc, NamespacedKey key,
@@ -644,6 +641,10 @@ public class Events implements Listener {
 
     @EventHandler
     public void onInteraction(PlayerInteractEntityEvent event) {
+        // Skip PlayerInteractAtEntityEvent — it's handled by onInteractAtEntity to avoid double-processing
+        if (event.getClass() != PlayerInteractEntityEvent.class)
+            return;
+
         Player player = event.getPlayer();
         if (moving.containsKey(player)) {
             event.setCancelled(true);
